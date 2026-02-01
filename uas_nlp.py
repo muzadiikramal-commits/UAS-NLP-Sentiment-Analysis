@@ -4,37 +4,39 @@ from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report
 
-# --- 1. MEMBACA DATASET DARI FILE EKSTERNAL ---
-# Ini membuat tugasmu lebih profesional karena memisahkan data dan kode
+# Load dataset
 df = pd.read_csv('data_komentar.csv')
 
-# --- 2. PREPROCESSING TEKS ---
-stemmer = StemmerFactory().create_stemmer()
+# Inisialisasi Stemmer Sastrawi
+factory = StemmerFactory()
+stemmer = factory.create_stemmer()
 
-def preprocess_teks(teks):
-    teks = str(teks).lower() # Case Folding
-    teks = re.sub(r'[^\w\s]', '', teks) # Cleaning
-    teks = stemmer.stem(teks) # Stemming
-    return teks
+def cleaning_process(text):
+    # Case folding dan penghapusan karakter khusus
+    text = str(text).lower()
+    text = re.sub(r'[^\w\s]', '', text)
+    # Proses stemming
+    text = stemmer.stem(text)
+    return text
 
-print("Sedang melakukan Preprocessing...")
-df['ulasan_bersih'] = df['ulasan'].apply(preprocess_teks)
+print("Proses preprocessing data sedang berjalan...")
+df['ulasan_bersih'] = df['ulasan'].apply(cleaning_process)
 
-# --- 3. PEMBAGIAN DATASET (80:20) ---
+# Transformasi teks menggunakan TF-IDF
 tfidf = TfidfVectorizer()
 X = tfidf.fit_transform(df['ulasan_bersih'])
 y = df['sentimen']
 
-# Menggunakan train_test_split sesuai instruksi soal
+# Split data: 80% training dan 20% testing
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# --- 4. PELATIHAN MODEL ---
+# Training model Multinomial Naive Bayes
 model = MultinomialNB()
 model.fit(X_train, y_train)
 
-# --- 5. EVALUASI ---
+# Prediksi dan evaluasi hasil
 y_pred = model.predict(X_test)
-print("\n=== LAPORAN EVALUASI ===")
+print("\n=== Hasil Evaluasi Model ===")
 print(classification_report(y_test, y_pred))
